@@ -8,22 +8,14 @@ from torch_geometric.nn import global_mean_pool, global_max_pool, global_add_poo
 from torch_geometric.utils import to_edge_index
 import yaml 
 from yaml import SafeLoader
-import random
 
 from data.load import load_data
 from data.sampling import collect_subgraphs, ego_graphs_sampler
 from utils.peft import create_peft_config
 from utils.args import Arguments
-from models.encoder import GCN_Encoder, SAGE_Encoder, GIN_Encoder, MLP_Encoder, GAT_Encoder, PMLP_Encoder, GCNII_Encoder,MOE
+from models.encoder import GCN_Encoder, SAGE_Encoder, GIN_Encoder, MLP_Encoder, GAT_Encoder, PMLP_Encoder, GCNII_Encoder
 
-def set_seed(seed):
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(seed)
-        torch.cuda.manual_seed_all(seed)
-set_seed(7)
+
 
 def get_hidden_states(config):
     path = f'./llm_cache/{config.dataset}/layers'
@@ -68,11 +60,7 @@ def get_dataloader(data, config):
         val_loader = DataLoader(val_graphs, **kwargs)
         test_loader = DataLoader(test_graphs, **kwargs)
     return train_loader, val_loader, test_loader
-
-from collections import Counter
-def expert_selection_distribution(selected_experts):
-    all_selections = [expert for sample in selected_experts for expert in sample]
-    return Counter(all_selections)
+    
 
 def efficient_train_eval(train_loader, val_loader, test_loader, xs, model_list, prog_list,  alpha_list, exit_list, optimizer):
     patience = config.patience
@@ -152,8 +140,6 @@ def efficient_eval(test_loader, xs, model_list, prog_list, alpha_list, exit_list
                 # x = prog_list[i](xs[i][data.original_idx])*a + last*(1-a)
                 x = prog_list[i]((xs[i][data.original_idx.cpu()]).to(device))*a + last*(1-a)
                 out = m(x, data.edge_index)
-            #distribution = expert_selection_distribution(m.selected_experts)
-            #print(f"层数 {i}",distribution)
             last = out
             # dynamic early exit based on entropy
             hid_out = torch.cat([last[data.root_n_index], global_mean_pool(last, data.batch)], dim=1)
@@ -281,10 +267,8 @@ if __name__ == '__main__':
             'GAT_Encoder': GAT_Encoder, 
             'SAGE_Encoder': SAGE_Encoder, 
             'MLP_Encoder': MLP_Encoder,
-            'MOE' : MOE
         }
-        #model_list = [encoders[config.encoder](k, config.layer_num, hidden, k, activation=config.activation, norm=config.norm, last_activation=(l !=len(layer_select)-1), dropout=config.dropout).to(device) for l in layer_select]
-        model_list = [encoders[config.encoder](4, 1, input_dim=k, layer_num = config.layer_num, hidden_size = hidden, output_dim = k, activation=config.activation, norm=config.norm, last_activation=(l !=len(layer_select)-1), dropout=config.dropout).to(device) for l in layer_select]
+        model_list = [encoders["SAGE_Encoder"](k, config.layer_num, hidden, k, activation=config.activation, norm=config.norm, last_activation=(l !=len(layer_select)-1), dropout=config.dropout).to(device) for l in layer_select]
         prog_list = [torch.nn.Sequential(torch.nn.Linear(input_dim, k), torch.nn.LayerNorm(k), torch.nn.ReLU(), torch.nn.Linear(k,k)).to(device) for l in layer_select]
         alpha_list = [torch.nn.Parameter(torch.tensor(0.0), requires_grad=True) for l in layer_select]
         exit_list = [torch.nn.Linear(k*2, num_classes).to(device) for l in layer_select]

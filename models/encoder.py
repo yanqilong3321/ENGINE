@@ -5,10 +5,20 @@ from torch_geometric.nn.inits import glorot
 from torch_geometric.nn import GCNConv, SAGEConv, GATConv, GINConv, global_mean_pool, GraphNorm, GCN2Conv
 from torch.nn import BatchNorm1d, Identity, LayerNorm
 import torch.nn as nn
+import numpy as np
+import random
 
 from utils.register import register
 # from .conv import *
 
+def set_random_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)  # if you are using multi-GPU.
+
+set_random_seed(7)
 
 def get_activation(name: str):
         activations = {

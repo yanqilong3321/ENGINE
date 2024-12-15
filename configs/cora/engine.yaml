@@ -8,6 +8,7 @@ dropout: 0.5
 norm: id
 sampler: rw
 encoder: MOE
+#encoder: SAGE_Encoder
 r: 32
 T: 0.1
 layer_select: [0,5,10,15,20,25,-1]
