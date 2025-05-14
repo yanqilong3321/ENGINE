@@ -52,6 +52,10 @@ class Arguments:
         
         # dynamic early exit
         self.parser.add_argument('--early', action='store_true', help="the sign of dynamic early exit")
+        self.parser.add_argument('--num_experts', type=int, help="the batch size", default=4)
+        self.parser.add_argument('--top_k', type=int, help="the batch size", default=2)
+
+        
         
     def parse_args(self):
         return self.parser.parse_args()

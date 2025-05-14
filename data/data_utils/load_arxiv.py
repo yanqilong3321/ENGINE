@@ -30,7 +30,7 @@ def get_raw_text_arxiv(use_text=False, seed=0):
     nodeidx2paperid = pd.read_csv(
         './datasets/ogbn_arxiv/mapping/nodeidx2paperid.csv.gz', compression='gzip')
 
-    raw_text = pd.read_csv('./datasets/arxiv_orig/titleabs.tsv',
+    raw_text = pd.read_csv('./datasets/ogbn_arxiv_orig/titleabs.tsv',
                            sep='\t', header=None, names=['paper id', 'title', 'abs'], skiprows=[0])
     raw_text = raw_text.dropna()
 

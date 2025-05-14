@@ -7,6 +7,8 @@ from torch_sparse import SparseTensor
 
 
 
+
+
 def add_remaining_selfloop_for_isolated_nodes(edge_index, num_nodes):
     num_nodes = max(maybe_num_nodes(edge_index), num_nodes)
     # only add self-loop on isolated nodes
@@ -23,6 +25,7 @@ def add_remaining_selfloop_for_isolated_nodes(edge_index, num_nodes):
     
     
 def collect_subgraphs(selected_id, graph, walk_steps=20, restart_ratio=0.5):
+    torch.manual_seed(7)
     graph  = copy.deepcopy(graph) # modified on the copy
     edge_index = graph.edge_index
     node_num = graph.x.shape[0]
